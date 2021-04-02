@@ -1,4 +1,5 @@
 from datetime import datetime
+from filelock import FileLock
 from hashlib import md5
 import json
 import os
@@ -59,6 +60,7 @@ class DbCore(object):
     LEVEL_TWO_BUCKETS = 63
     RECORD_FILE = 'record.json'
     RECORD_FILE_TMP = 'record.json.tmp'
+    RECORD_FILE_LOCK = 'record.json.lock'
 
     def __init__(self, db_path='./database/'):
         self.db_path = db_path
@@ -82,10 +84,17 @@ class DbCore(object):
     def write(self, folder_path, record):
         file_path = os.path.join(folder_path, self.RECORD_FILE)
         tmp_file_path = os.path.join(folder_path, self.RECORD_FILE_TMP)
+        lock_file_path = os.path.join(folder_path, self.RECORD_FILE_LOCK)
         os.makedirs(os.path.dirname(tmp_file_path), exist_ok=True)
+        lock = FileLock(lock_file_path)
+        with lock:
+            with open(tmp_file_path, "w") as f:
+                json.dump(record.json(), f)
+            os.rename(tmp_file_path, file_path)
 
     def read(self, folder_path):
         file_path = os.path.join(folder_path, self.RECORD_FILE)
+        # TODO: Implement read lock
         with open(file_path) as f:
             data = json.load(f)
         return Record.read_record_from_json(data)
