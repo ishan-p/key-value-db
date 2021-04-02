@@ -59,3 +59,17 @@ class DbCore(object):
         directory = os.path.join(self.db_path, self.__map_hash_to_dir_path(key))
         return os.path.join(directory, key)
 
+    def write(self, folder_path, record):
+        file_path = os.path.join(folder_path, self.RECORD_FILE)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "w") as f:
+            json.dump(record.json(), f)
+
+    def read(self, folder_path):
+        file_path = os.path.join(folder_path, self.RECORD_FILE)
+        with open(file_path) as f:
+            data = json.load(f)
+        return Record.read_record_from_json(data)
+
+    def delete(self, folder_path):
+        shutil.rmtree(folder_path)
