@@ -21,3 +21,15 @@ class DbHandler(object):
         file_path = self.dbcore.get_file_path(key)
         self.dbcore.delete(file_path)
 
+    def increment_by(self, key, increment_by):
+        record = self.read(key)
+        new_val = record.value + increment_by
+        return self.create_or_update(key, new_val)
+
+    def increment(self, key):
+        try:
+            record = self.read(key)
+            new_val = record.value + 1
+            return self.create_or_update(key, new_val)
+        except FileNotFoundError:
+            return self.create_or_update(key, 1)
