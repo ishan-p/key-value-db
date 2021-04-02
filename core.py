@@ -12,14 +12,22 @@ class Record(object):
     and can be initiated from json while reading the db file.
     """
 
-    def __init__(self, key, value, dtype, modified_at=None):
+    def __init__(self, key, value, dtype, modified_at=None, checksum=None):
         self.key = key
         self.dtype = dtype
         self.value = dtype(value)
+        self.checksum = self.generate_checksum(self.value)
+        if checksum:
+            if checksum != self.checksum:
+                raise Exception('Checksum Invalid')
         if modified_at:
             self.modified_at = modified_at
         else:
             self.modified_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+    @staticmethod
+    def generate_checksum(value):
+        return md5(str(value).encode('utf-8')).hexdigest()
 
     def json(self):
         d = dict()
@@ -27,6 +35,7 @@ class Record(object):
         d['dtype'] = self.dtype.__name__
         d['value'] = self.value
         d['modified_at'] = self.modified_at
+        d['checksum'] = self.checksum
         return d
 
     @staticmethod
@@ -35,7 +44,8 @@ class Record(object):
             obj['key'],
             obj['value'],
             eval(obj['dtype']),
-            obj['modified_at']
+            obj['modified_at'],
+            obj['checksum']
         )
 
 
