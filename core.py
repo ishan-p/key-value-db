@@ -1,5 +1,8 @@
 from datetime import datetime
+from hashlib import md5
 import json
+import os
+import shutil
 
 
 class Record(object):
@@ -29,4 +32,30 @@ class Record(object):
             eval(obj['dtype']),
             obj['modified_at']
         )
+
+
+class DbCore(object):
+
+    LEVEL_ONE_BUCKETS = 31
+    LEVEL_TWO_BUCKETS = 63
+    RECORD_FILE = 'record.json'
+
+    def __init__(self, db_path='./database/'):
+        self.db_path = db_path
+
+    @staticmethod
+    def hash(key, offset=0):
+        h = offset
+        for s in list(md5(str(key).encode('utf-8')).hexdigest()):
+            h += ord(s)
+        return h
+
+    def __map_hash_to_dir_path(self, key):
+        dir_1 = str(self.hash(key, 1) % self.LEVEL_ONE_BUCKETS)
+        dir_2 = str(self.hash(key, 2) % self.LEVEL_TWO_BUCKETS)
+        return os.path.join(dir_1, dir_2)
+
+    def get_file_path(self, key):
+        directory = os.path.join(self.db_path, self.__map_hash_to_dir_path(key))
+        return os.path.join(directory, key)
 
