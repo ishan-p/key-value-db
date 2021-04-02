@@ -6,6 +6,11 @@ import shutil
 
 
 class Record(object):
+    """
+    Record structure definition.
+    Record is provides method to be converted as json while writing to a file
+    and can be initiated from json while reading the db file.
+    """
 
     def __init__(self, key, value, dtype, modified_at=None):
         self.key = key
@@ -35,6 +40,10 @@ class Record(object):
 
 
 class DbCore(object):
+    """
+    Implements to core db methods - read, write and delete.
+    Files are stored on the disk per key with the help of a hash map.
+    """
 
     LEVEL_ONE_BUCKETS = 31
     LEVEL_TWO_BUCKETS = 63

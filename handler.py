@@ -2,6 +2,9 @@ from core import DbCore, Record
 
 
 class DbHandler(object):
+    """
+    This is a handler interacting between consumer side service class and core db
+    """
 
     def __init__(self):
         self.dbcore = DbCore()

@@ -2,6 +2,9 @@ from handler import DbHandler
 
 
 class Db(object):
+    """
+    This is the service class providing API to our db consumers
+    """
 
     def __init__(self):
         self.handle = DbHandler()
