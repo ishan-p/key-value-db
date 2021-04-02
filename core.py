@@ -48,6 +48,7 @@ class DbCore(object):
     LEVEL_ONE_BUCKETS = 31
     LEVEL_TWO_BUCKETS = 63
     RECORD_FILE = 'record.json'
+    RECORD_FILE_TMP = 'record.json.tmp'
 
     def __init__(self, db_path='./database/'):
         self.db_path = db_path
@@ -70,9 +71,8 @@ class DbCore(object):
 
     def write(self, folder_path, record):
         file_path = os.path.join(folder_path, self.RECORD_FILE)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w") as f:
-            json.dump(record.json(), f)
+        tmp_file_path = os.path.join(folder_path, self.RECORD_FILE_TMP)
+        os.makedirs(os.path.dirname(tmp_file_path), exist_ok=True)
 
     def read(self, folder_path):
         file_path = os.path.join(folder_path, self.RECORD_FILE)
