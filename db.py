@@ -42,3 +42,16 @@ class Db(object):
 
     def multi_discard(self):
         self.handle.discard_pipe()
+
+    def compact_begin(self):
+        if self.handle.pipe:
+            raise Exception("Compact cannot be used in multi command mode")
+        else:
+            self.handle.set_pipe()
+
+    def compact_yield(self):
+        compact_commands = self.handle.compact()
+        self.handle.discard_pipe()
+        for command in compact_commands:
+            print(command)
+        return compact_commands

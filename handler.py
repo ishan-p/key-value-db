@@ -77,3 +77,15 @@ class DbHandler(object):
         self.in_memory_db = dict()
         self.delete_keys_pipe = list()
         self.pipe = False
+
+    def compact(self):
+        compact_list = list()
+        for key in self.in_memory_db:
+            compact_list.append("SET {key} {value}".format(
+                key=key,
+                value=self.in_memory_db[key].value
+            ))
+        # for key in self.delete_keys_pipe:
+        #     if key not in self.in_memory_db:
+        #         compact_list.append("DEL {key}".format(key=key))
+        return compact_list
