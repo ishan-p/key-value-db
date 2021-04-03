@@ -22,7 +22,7 @@ db_handle.increment_by("counter", 10)  # Returns 12
 
 - Storage
   - Alternative 1 (Implemented): Create a hash table for keys and store each key as an indpendent file located by the hash map
-    - Pros:  
+    - Pros:
       - Thread safe
       - Scalable
     - Cons:
@@ -50,11 +50,47 @@ db_handle.increment_by("counter", 10)  # Returns 12
 - Define error handling
 
 
+### Multi Command
+Usage:
+```sh
+from db import Db
+
+db_handle = Db()
+db_handle.multi_begin()
+db_handle.set("key", 1)
+db_handle.increment_by("key", 10)
+db_handle.multi_execute()  # db_handle.discard() will ignore all multi commands
+db_handle.get("key")  # Returns 11
+```
+Assumptions:
+- All commands after multi_begin are executed in memory dict
+- discard will ignore all changes and keep persisted db to its original state
+- execute will perform all resultant commands (set key from in-memory dict) to the disk, persisting the operations
+- Currently implementaion of executing commands to the disk happens sequentially in single thread. But this can easily be scaled by initiating multiple dbCore instances in multi-thread setup
+- Reads will happend from the disk if key is absent in-memory
+- Current implementation of the multi command is not thread safe
+
+
+### Compact Command
+Assumptions:
+- This is a test command to check reduced operations set
+- Any command in compact will not be executed
+- Internally it uses multi command for reduction and discards all commands on yield
+
+Usage:
+```sh
+from db import Db
+
+db_handle = Db()
+db_handle.compact_begin()
+db_handle.set("key", 1)
+db_handle.increment_by("key", 10)
+compact_commands = db_handle.compact_yield()  # Returns list of reduced commands. ["SET KEY 11"] in this case
+```
+
 ### TO DOs
-- Implement multi command feature
 - Add input validation to the service APIs
 - Add negative tests
-- Implement compact command feature
 - Add read lock
 - Improve shell cli
 - In memory cache
