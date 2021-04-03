@@ -8,21 +8,41 @@ class DbHandler(object):
 
     def __init__(self):
         self.dbcore = DbCore()
+        self.pipe = False
+        self.in_memory_db = dict()
+        self.delete_keys_pipe = list()
 
     def create_or_update(self, key, value):
-        file_path = self.dbcore.get_file_path(key)
         record = Record(key, value, type(value))
-        self.dbcore.write(file_path, record)
+        if self.pipe:
+            self.in_memory_db[key] = record
+        else:
+            file_path = self.dbcore.get_file_path(key)
+            self.dbcore.write(file_path, record)
         return record
 
-    def read(self, key):
+    def __read(self, key):
         file_path = self.dbcore.get_file_path(key)
-        record = self.dbcore.read(file_path)
+        return self.dbcore.read(file_path)
+
+    def read(self, key):
+        if self.pipe:
+            if key in self.in_memory_db:
+                return self.in_memory_db[key]
+            else:
+                record = self.__read(key)
+                self.create_or_update(key, record.value)
+        else:
+            record = self.__read(key)
         return record
 
     def delete(self, key):
-        file_path = self.dbcore.get_file_path(key)
-        self.dbcore.delete(file_path)
+        if self.pipe:
+            self.in_memory_db.pop(key, None)
+            self.delete_keys_pipe.append(key)
+        else:
+            file_path = self.dbcore.get_file_path(key)
+            self.dbcore.delete(file_path)
 
     def increment_by(self, key, increment_by):
         record = self.read(key)
@@ -36,3 +56,24 @@ class DbHandler(object):
             return self.create_or_update(key, new_val)
         except FileNotFoundError:
             return self.create_or_update(key, 1)
+
+    def set_pipe(self):
+        self.pipe = True
+
+    def execute_pipe(self):
+        self.pipe = False
+        for key in self.in_memory_db:
+            self.create_or_update(key, self.in_memory_db[key].value)
+        for key in self.delete_keys_pipe:
+            try:
+                if key not in self.in_memory_db:
+                    self.delete(key)
+            except FileNotFoundError:
+                continue
+        self.in_memory_db = dict()
+        self.delete_keys_pipe = list()
+
+    def discard_pipe(self):
+        self.in_memory_db = dict()
+        self.delete_keys_pipe = list()
+        self.pipe = False

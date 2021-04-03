@@ -33,3 +33,12 @@ class Db(object):
             return record.value
         except FileNotFoundError:
             return None
+
+    def multi_begin(self):
+        self.handle.set_pipe()
+
+    def multi_execute(self):
+        self.handle.execute_pipe()
+
+    def multi_discard(self):
+        self.handle.discard_pipe()
